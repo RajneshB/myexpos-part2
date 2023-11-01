@@ -1,0 +1,137 @@
+alias curr_id R2;
+curr_id=[SYSTEM_STATUS_TABLE+1];
+
+[PROCESS_TABLE+curr_id*16+9]=8;
+[PROCESS_TABLE+curr_id*16+13]=SP;
+alias userSP R9;
+userSP=SP;
+// print "fork beg";
+
+SP=[PROCESS_TABLE+curr_id*16+11]*512-1;
+
+multipush(R1,R9);
+R1=1;
+call MOD_1;
+multipop(R1,R9);
+if(R0==-1) then
+    [[PTBR+((userSP-1)/512)*2]*512+(userSP-1)%512]=-1;
+    SP=userSP;
+    [PROCESS_TABLE+curr_id*16+9]=0;
+    // print "forkend";
+    ireturn;
+else
+    alias childpid R0;
+    if([PTBR+4]==-1) then
+        multipush(R0,R6,R9);
+        R1=1;
+        call MOD_2;
+        [PTBR+4]=R0;
+        [PTBR+5]="1110";
+        multipop(R0,R6,R9);
+        multipush(R0,R6,R9);
+        R1=1;
+        call MOD_2;
+        [PTBR+6]=R0;
+        [PTBR+7]="1110";
+        multipop(R0,R6,R9);
+    endif;
+    alias  stack1 R11;
+    alias  stack2 R12;
+    alias  userarea R13;
+
+    multipush(R0,R9,R12,R13);
+    R1=1;
+    call MOD_2;
+    stack1=R0;
+    multipop(R0,R9,R12,R13);
+
+    multipush(R0,R9,R11,R13);
+    R1=1;
+    call MOD_2;
+    stack2=R0;
+    multipop(R0,R9,R11,R13);
+
+    multipush(R0,R9,R11,R12);
+    R1=1;
+    call MOD_2;
+    userarea=R0;
+    multipop(R0,R9,R11,R12);
+    alias childprocess R5;
+    childprocess=PROCESS_TABLE+childpid*16;
+    [childprocess]=0;
+    [childprocess+1]=childpid;
+    [childprocess+2]=curr_id;
+    [childprocess+3]=[PROCESS_TABLE+curr_id*16+3];
+    [childprocess+4]=CREATED;
+    [childprocess+6]=[PROCESS_TABLE+curr_id*16+6];
+    [childprocess+7]=[PROCESS_TABLE+curr_id*16+7];
+    [childprocess+9]=0;
+    [childprocess+10]=[PROCESS_TABLE+curr_id*16+10];
+    [childprocess+11]=userarea;
+    [childprocess+12]=0;
+    [childprocess+13]=[PROCESS_TABLE+curr_id*16+13];
+    [childprocess+14]=PAGE_TABLE_BASE+childpid*20;
+    [childprocess+15]=10;
+    alias i R14;
+    i=0;
+    while(i<8) do
+        alias resource R7;
+        alias cresource R8;
+        cresource=([childprocess+11]+1)*512-16;
+        resource=([PROCESS_TABLE+curr_id*16+11]+1)*512-16;
+        if([resource+2*i]==1) then
+            [SEMAPHORE_TABLE+[resource+2*i+1]*4+1]=[SEMAPHORE_TABLE+[resource+2*i+1]*4+1]+1;
+        endif;
+        if ([resource+2*i]==0) then
+                [OPEN_FILE_TABLE+[resource+2*i+1]*4+1]=[OPEN_FILE_TABLE+[resource+2*i+1]*4+1]+1;
+        endif;
+        [cresource+2*i]=[resource+2*i];
+        [cresource+2*i+1]=[resource+2*i+1];
+        i=i+1;
+    endwhile;
+    i=0;
+    while(i<10) do
+        [DISK_MAP_TABLE+childpid*10+i]=[DISK_MAP_TABLE+curr_id*10+i];
+        i=i+1;
+    endwhile;
+    i=0;
+    while(i<=15) do
+        [PAGE_TABLE_BASE+childpid*20+i]=[PTBR+i];
+        i=i+1;
+    endwhile;
+    [PAGE_TABLE_BASE+childpid*20+16]=stack1;
+    [PAGE_TABLE_BASE+childpid*20+17]="0110";
+    [PAGE_TABLE_BASE+childpid*20+18]=stack2;
+    [PAGE_TABLE_BASE+childpid*20+19]="0110";
+
+    
+    i=0;
+    while (i < 16) do
+        if ([PAGE_TABLE_BASE + childpid*20 + i] != -1) then
+            [MEMORY_FREE_LIST + [PAGE_TABLE_BASE + childpid*20 + i]] = [MEMORY_FREE_LIST + [PAGE_TABLE_BASE + childpid*20 + i]] + 1;
+        endif;
+        i = i + 2;
+    endwhile;
+    i=0;
+    while(i<512) do
+        [[PAGE_TABLE_BASE+childpid*20+16]*512+i]=[[PTBR+16]*512+i];
+        i=i+1;
+    endwhile;
+    i=0;
+    while(i<512) do
+        [[PAGE_TABLE_BASE+childpid*20+18]*512+i]=[[PTBR+18]*512+i];
+        i=i+1;
+    endwhile;
+    
+        [[childprocess+11]*512]=BP;
+        
+
+    [[PTBR+ (userSP-1)/512*2]*512+(userSP-1)%512]=childpid;
+    [[PAGE_TABLE_BASE+childpid*20 + (userSP-1)/512*2]*512+(userSP-1)%512]=0;
+
+
+        [PROCESS_TABLE + curr_id*16 + 9] = 0;
+    SP = [PROCESS_TABLE + curr_id*16 +  13];
+    // print "forkend";
+    ireturn;
+endif;

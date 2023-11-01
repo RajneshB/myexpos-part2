@@ -1,0 +1,79 @@
+alias currID R5;
+alias userSP R2;
+userSP=SP;
+currID=[SYSTEM_STATUS_TABLE+1];
+[PROCESS_TABLE+currID*16+13]=SP;
+SP=[PROCESS_TABLE+currID*16+11]*512-1;
+[PROCESS_TABLE+currID*16+9]=21;
+if(currID!=1 && [PROCESS_TABLE+currID*16+3]!=1) then
+    [[PTBR+(userSP-1)/512*2]*512+(userSP-1)%512]=-1;
+    SP=userSP;
+    [PROCESS_TABLE+currID*16+9]=0;
+    ireturn;
+endif;
+
+multipush(R1,R2,R5);
+R1 = 5;
+R2 = currID;
+call MOD_1;
+multipop(R1,R2,R5);
+
+
+
+
+
+//disk free list
+multipush(R1,R2,R5);
+R1=1;
+R2=currID;
+R3=61;
+R4=2;
+call MOD_4;
+multipop(R1,R2,R5);
+
+//inode
+multipush(R1,R2,R5);
+R1=1;
+R2=currID;
+R3=59;
+R4=3;
+call MOD_4;
+multipop(R1,R2,R5);
+
+//inode second
+multipush(R1,R2,R5);
+R1=1;
+R2=currID;
+R3=60;
+R4=4;
+call MOD_4;
+multipop(R1,R2,R5);
+
+
+//root
+multipush(R1,R2,R5);
+R1=1;
+R2=currID;
+R3=62;
+R4=5;
+call MOD_4;
+multipop(R1,R2,R5);
+
+alias i R3;
+i=0;
+
+while( i < 4 )do
+    if ( [BUFFER_TABLE + 4*i ]!= -1 && [BUFFER_TABLE + 4*i + 1] == 1)then
+        multipush(R1,R2,R5,R3);
+        R1 = 1;
+        R2 = currID;
+        R4 = [BUFFER_TABLE + 4*i];      
+        R3 = BUFFER_BASE + i;           
+        call MOD_4;
+        multipop(R1,R2,R5,R3);
+    endif;
+    i = i + 1;
+endwhile;
+
+
+halt;

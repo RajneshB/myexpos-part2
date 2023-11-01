@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+
+(( sum = $1 + $2))
+
+echo "$sum"
+
+
+for ((i = 0; i < 5; i++)); do 
+    echo "$i"
+done

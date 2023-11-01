@@ -1,0 +1,65 @@
+alias userSP R1;
+alias syscall R2;
+alias currID R3;
+currID=[SYSTEM_STATUS_TABLE+1];
+userSP=SP;
+[PROCESS_TABLE+currID*16+13]=SP;
+syscall=[[PTBR+(userSP-5)/512*2]*512+(userSP-5)%512];
+alias retval R10;
+retval=[PTBR+(userSP-1)/512*2]*512+(userSP-1)%512;
+alias prcctable R11;
+    alias userarea R12;
+    userarea=[PROCESS_TABLE+currID*16+11];
+
+prcctable=PROCESS_TABLE+currID*16;
+[prcctable+9]=syscall;
+SP=[prcctable+9+2]*512-1;
+
+
+//login
+if(syscall==27) then
+    alias username R4;
+    alias password R5;
+    username=[[PTBR+(userSP-4)/512*2]*512+(userSP-4)%512];
+    password=[[PTBR+(userSP-3)/512*2]*512+(userSP-3)%512];
+
+    if(currID!=1) then
+        [retval]=-2;
+        SP=userSP;
+        [prcctable+9]=0;
+        ireturn;
+    endif;
+    alias i R6;
+    i=0;
+    while(i<16) then
+        if([USER_TABLE+i*2]==username) then
+            break;
+        endif;
+        i=i+1;
+    endwhile;
+    if(i==16) then
+        [retval]=-1;
+        SP=userSP;
+        [prcctable+9]=0;
+        ireturn;
+    endif;
+    encrypt R5;
+    if([USER_TABLE+i*2+1]==password) then
+        [retval]=-1;
+        SP=userSP;
+        [prcctable+9]=0;
+        ireturn;
+    endif;
+    [PROCESS_TABLE+16+3]=i;
+    [PROCESS_TABLE+16+4]=CREATED;
+
+    [prcctable+4]=WAIT_PROCESS;
+    [prcctable+5]=2;
+
+    [SYSTEM_STATUS_TABLE]=i;
+    multipush(R1,R2,R3,R4,R5,R10,R11,R12);
+    call MOD_5;
+    multipop(R1,R2,R3,R4,R5,R10,R11,R12);
+
+endif;
+

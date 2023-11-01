@@ -1,0 +1,108 @@
+alias funcnum R1;
+alias pagenum R2;
+//Get free page
+if(funcnum==1) then
+    [SYSTEM_STATUS_TABLE+3]=[SYSTEM_STATUS_TABLE+3]+1;
+    while([SYSTEM_STATUS_TABLE+2]==0) do 
+        [PROCESS_TABLE+[SYSTEM_STATUS_TABLE+1]*16+4]=WAIT_MEM;
+        multipush(R0,R1,R2,R3,R4);
+        call MOD_5;
+        multipop(R0,R1,R2,R3,R4);
+    endwhile;
+    [SYSTEM_STATUS_TABLE+3]=[SYSTEM_STATUS_TABLE+3]-1;
+    [SYSTEM_STATUS_TABLE+2]=[SYSTEM_STATUS_TABLE+2]-1;
+    alias i R6;
+    i=0;
+    while(i<128) do
+        if([MEMORY_FREE_LIST+i]==0) then
+            break;
+        endif;
+        i=i+1;
+    endwhile;
+    [MEMORY_FREE_LIST+i]=1;
+    R0=i;
+    //breakpoint;
+    return ;
+endif;
+//Release page
+if(funcnum==2) then
+    [MEMORY_FREE_LIST+pagenum]=[MEMORY_FREE_LIST+pagenum]-1;
+    if([MEMORY_FREE_LIST+pagenum]==0) then
+        [SYSTEM_STATUS_TABLE+2]=[SYSTEM_STATUS_TABLE+2]+1;
+    endif;
+    alias i R6;
+    i=0;
+    while(i<16) do
+        if([PROCESS_TABLE+ i*16 +4]==WAIT_MEM) then
+            [PROCESS_TABLE+i*16+4]=READY;
+        endif;
+        i=i+1;
+    endwhile;
+    //breakpoint;
+    return;
+endif;
+if(funcnum==5) then
+    alias retPageNo R0;
+    alias BlockNo R2;
+    alias currentPID R3;
+
+    alias i R5;
+    alias j R6;
+    i=0;
+    while( i < MAX_PROC_NUM )do
+        j=0;
+        while( j < 10 )do
+            if ( [DISK_MAP_TABLE + 10*i + j] == BlockNo  )then 
+                if ( [[PROCESS_TABLE + (i * 16) + 14] + 2 * j] != -1 )then
+                    R0 = [[PROCESS_TABLE + (i * 16) + 14] + 2 * j];
+                    [MEMORY_FREE_LIST + R0] = [MEMORY_FREE_LIST + R0] + 1; 
+                    return;
+                endif;
+            endif;
+            j = j + 1;
+        endwhile;
+        i = i + 1;
+    endwhile;
+    
+   multipush(R1,R2,R3,R4,R5,R6);
+    R1 = 1;
+    call MEMORY_MANAGER;
+    retPageNo = R0;
+    multipop(R1,R2,R3,R4,R5,R6);
+    
+    
+    multipush(R0,R1,R2,R3,R4,R5,R6);
+    R1 = 2;
+    R4 = BlockNo;
+    R2 = [SYSTEM_STATUS_TABLE + 1];
+    R3 = retPageNo;
+    call DEVICE_MANAGER;
+    multipop(R0,R1,R2,R3,R4,R5,R6);
+
+    R0 = retPageNo;
+    // //breakpoint;
+    return;
+endif;
+if(funcnum==4) then
+    [DISK_FREE_LIST+R2]=[DISK_FREE_LIST+R2]-1;
+    return;
+
+endif;
+
+//get free block
+if(funcnum==3) then
+    alias  i R3;
+    i=DISK_FREE_AREA;
+    while(i<DISK_SWAP_AREA) do
+        if([DISK_FREE_LIST+i]==0) then
+            [DISK_FREE_LIST+i]=1;
+            R0=i;
+            return;
+        endif;
+        i=i+1;
+    endwhile;
+    R0=-1;
+    return;
+    
+
+endif;

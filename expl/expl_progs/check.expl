@@ -1,0 +1,9 @@
+type
+    chk{
+        int a;
+    }
+endtype
+
+int main(){
+    
+}

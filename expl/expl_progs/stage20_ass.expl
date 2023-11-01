@@ -1,0 +1,17 @@
+int main()
+{
+decl
+    int temp;
+
+enddecl
+begin
+
+    temp = exposcall("Fork");
+    if (temp == 0)then
+        temp = exposcall("Exec","odd");
+    else
+        temp = exposcall("Exec","even");
+    endif;
+    return 0;
+end
+}

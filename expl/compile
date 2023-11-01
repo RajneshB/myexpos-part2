@@ -1,0 +1,6 @@
+#!/usr/bin/bash
+
+for File in ./expl_progs/*.expl; do
+    echo $File;
+    ./expl $File;
+done
