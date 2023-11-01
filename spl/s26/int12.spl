@@ -1,0 +1,42 @@
+alias userSP R1;
+alias syscall R2;
+alias currID R3;
+currID=[SYSTEM_STATUS_TABLE+1];
+userSP=SP;
+[PROCESS_TABLE+currID*16+13]=SP;
+syscall=[[PTBR+(userSP-5)/512*2]*512+(userSP-5)%512];
+alias retval R10;
+retval=[PTBR+(userSP-1)/512*2]*512+(userSP-1)%512;
+alias prcctable R11;
+    alias userarea R12;
+    userarea=[PROCESS_TABLE+currID*16+11];
+
+prcctable=PROCESS_TABLE+currID*16;
+[prcctable+9]=syscall;
+SP=[prcctable+9+2]*512-1;
+
+if(syscall==28) then
+
+    if(currID!=2) then
+        [retval]=-1;
+        SP=userSP;
+        [prcctable+9]=0;
+        ireturn;
+    endif;
+    multipush(R1,R2,R3,R10,R11,R12);
+    R1=5;
+    R2=currID;
+    call MOD_1;
+    multipop(R1,R2,R3,R10,R11,R12);
+    [prcctable+4]=TERMINATED;
+    [[PTBR+16]*512]=[67*512+1];
+    [prcctable+13]=4096;
+    [PROCESS_TABLE+16+4]=READY;
+    [SYSTEM_STATUS_TABLE]=0;
+    multipush(R1,R2,R3,R10,R11,R12);
+    call MOD_5;
+    multipop(R1,R2,R3,R10,R11,R12);
+    [prcctable+9]=0;
+    SP=userSP;
+    ireturn;
+endif;

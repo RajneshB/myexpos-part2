@@ -1,0 +1,210 @@
+
+alias userSP R1;
+alias syscall R2;
+alias currID R3;
+currID=[SYSTEM_STATUS_TABLE+1];
+userSP=SP;
+[PROCESS_TABLE+currID*16+13]=SP;
+syscall=[[PTBR+(userSP-5)/512*2]*512+(userSP-5)%512];
+alias retval R10;
+retval=[PTBR+(userSP-1)/512*2]*512+(userSP-1)%512;
+alias prcctable R11;
+    alias userarea R12;
+    userarea=[PROCESS_TABLE+currID*16+11];
+
+prcctable=PROCESS_TABLE+currID*16;
+[prcctable+9]=syscall;
+SP=[prcctable+9+2]*512-1;
+
+alias userid R4;
+userid=[prcctable+3];
+ 
+ //newusr
+if(syscall==22) then
+    alias username R5;
+    alias password R6;
+    username=[[PTBR+(userSP-4)/512*2]*512+(userSP-4)%512];
+    password=[[PTBR+(userSP-3)/512*2]*512+(userSP-3)%512];
+
+
+    if(userid!=ROOT || currID!=2) then
+        [retval]=-2;
+        [prcctable+9]=0;
+        SP=userSP;
+
+        ireturn;
+    endif;
+    alias i R7;
+    i=0;
+    while(i<MAX_USER_NUM) do
+        if([USER_TABLE+i*2]==username) then
+            SP=userSP;
+
+            [retval]=-1;
+            [prcctable+9]=0;
+            ireturn;
+        endif;
+        i=i+1;
+    endwhile;
+    i=0;
+    while(i<MAX_USER_NUM) do
+        if([USER_TABLE+i*2]==-1) then
+            break;
+        endif;
+        i=i+1;
+    endwhile;
+    if(i==MAX_USER_NUM) then
+        [retval]=-3;
+        SP=userSP;
+
+        [prcctable+9]=0;
+        ireturn;
+    endif;
+    encrypt password;
+    [USER_TABLE+i*2]=username;
+    [USER_TABLE+i*2+1]=password;
+        [retval]=0;
+        SP=userSP;
+
+        [prcctable+9]=0;
+        ireturn;
+
+endif;
+
+//rmuser
+if(syscall==23) then
+    alias username R5;
+    username=[[PTBR+(userSP-4)/512*2]*512+(userSP-4)%512];
+    if(userid!=ROOT || currID!=2) then
+        [retval]=-2;
+        SP=userSP;
+
+        [prcctable+9]=0;
+        ireturn;
+    endif;
+    if(username=="root" || username=="kernel") then
+        [retval]=-2;
+        SP=userSP;
+
+        [prcctable+9]=0;
+        ireturn;
+    endif;
+    alias i R6;
+    i=0;
+    while(i<MAX_USER_NUM) do
+        if([USER_TABLE+i*2]==username) then
+            break;
+        endif;
+        i=i+1;
+    endwhile;
+    if(i==MAX_USER_NUM) then
+        [retval]=-1;
+        [prcctable+9]=0;
+        SP=userSP;
+        ireturn;
+    endif;
+    alias rooti R8;
+    rooti=0;
+    while(rooti<MAX_USER_NUM) do
+        if([ROOT_FILE+rooti*8+3]==username) then
+            [retval]=-3;
+            SP=userSP;
+            [prcctable+9]=0;
+            ireturn;
+        endif;
+        rooti=rooti+1;
+    endwhile;
+    [USER_TABLE+i*2]=-1;
+    [USER_TABLE+i*2+1]=-1;
+    [retval]=0;
+    SP=userSP;
+    [prcctable+9]=0;
+    ireturn;  
+
+
+endif;
+//setpwd
+if(syscall==24) then
+
+    alias username R5;
+    alias password R6;
+    username=[[PTBR+(userSP-4)/512*2]*512+(userSP-4)%512];
+    password=[[PTBR+(userSP-3)/512*2]*512+(userSP-3)%512];
+    if(currID!=2) then
+        print "hell";
+
+        [retval]=-1;
+        [prcctable+9]=0;
+        SP=userSP;
+        ireturn;
+
+    endif; 
+    alias i R7;
+    i=0;
+    while(i<MAX_USER_NUM) do
+        if([USER_TABLE+2*i]==username) then
+            break;
+        endif;
+        i=i+1;
+    endwhile;
+    if(i==MAX_USER_NUM) then
+        print "hell";
+        [retval]=-2;
+        [prcctable+9]=0;
+        SP=userSP;
+        ireturn;
+    endif;
+    if([prcctable+3]!=i) then
+        if(userid!=ROOT) then
+            print "hell2";
+            [retval]=-1;
+            [prcctable+9]=0;
+            SP=userSP;
+            ireturn;
+        endif;
+    endif;
+    encrypt password;
+    [USER_TABLE+i*2+1]=password;
+    [retval]=0;
+    [prcctable+9]=0;
+    SP=userSP;
+    ireturn;
+endif;
+
+if(syscall==26) then
+    alias username R5;
+    username=[[PTBR+(userSP-4)/512*2]*512+(userSP-4)%512];
+    alias i R6;
+    i=0;
+    while(i<MAX_USER_NUM) do
+        if([USER_TABLE+i*2]==username) then
+            [retval]=i;
+            [prcctable+9]=0;
+            SP=userSP;
+            ireturn;
+        endif;
+        i=i+1;
+    endwhile;            
+    [retval]=-1;
+    [prcctable+9]=0;
+    SP=userSP;
+    ireturn;
+endif;
+
+if(syscall==25) then
+    alias userid R5;
+    userid=[[PTBR+(userSP-4)/512*2]*512+(userSP-4)%512];
+    if((userid<0 && userid>15) || [USER_TABLE+2*userid]==-1) then
+            [retval]=-1;
+            [prcctable+9]=0;
+            SP=userSP;
+            ireturn;
+    endif;
+
+             
+    [retval]=[USER_TABLE+userid*2];
+    [prcctable+9]=0;
+    SP=userSP;
+    ireturn;
+endif;
+

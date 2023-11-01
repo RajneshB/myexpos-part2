@@ -1,0 +1,28 @@
+int main(){
+    decl
+        int srci,desti,temp,temp1;
+        str srcn,destn,x;
+    enddecl
+    begin
+        temp=exposcall("Read",-1,srcn);
+        temp=exposcall("Read",-1,destn);
+        srci=exposcall("Open",srcn);
+        desti=exposcall("Open",destn);
+        if(desti<0) then
+            temp=exposcall("Create",destn,1);
+            desti=exposcall("Open",destn);
+        endif;
+        temp=exposcall("Seek",srci,0);
+        temp=exposcall("Seek",desti,0);
+        temp1 = exposcall("Read",srci,x);
+        while( temp1 != -2)do
+            temp = exposcall("Write",desti,x);
+            temp1 = exposcall("Read",srci,x);
+        endwhile;
+
+        temp = exposcall("Close",srci);
+        temp = exposcall("Close",desti);
+
+        return 0;
+    end
+}

@@ -1,0 +1,198 @@
+alias funcnum R1;
+alias currid R2;
+
+if(funcnum==1) then
+    alias i R10;
+    i=0;
+    while(i<16) do
+        if([PROCESS_TABLE+i*16+4]==TERMINATED) then
+            [PROCESS_TABLE+i*16+4]=ALLOCATED;
+            [PROCESS_TABLE+i*16+15]=10;
+            [PROCESS_TABLE+i*16+14]=PAGE_TABLE_BASE+i*20;
+            R0=i;
+            return;
+        endif;
+        i=i+1;
+    endwhile;
+    R0=-1;
+    return;
+endif;
+
+//free user area page
+if(funcnum==2) then
+    alias i R3;
+    alias resource R4;
+    resource=[PROCESS_TABLE+currid*16+11]*512+RESOURCE_TABLE_OFFSET;
+    i=0;
+    while(i<8) do
+        if([resource+i*2]==0) then
+            multipush(R1,R2,R3,R4);
+            R1=4;
+            R2=[resource+i*2+1];
+            call MOD_3;
+            multipop(R1,R2,R3,R4);
+        endif;
+        if([resource+i*2]==1) then
+            multipush(R1,R2,R3,R4);
+            R1=7;
+            R2=[resource+i*2+1];
+            R3=[SYSTEM_STATUS_TABLE+1];
+            call MOD_0;
+            multipop(R1,R2,R3,R4);  
+        endif;
+        [resource+i*2]=-1;
+        i=i+1;
+    endwhile;
+
+
+    multipush(R1,R2);
+    R1=2;
+    R2=[PROCESS_TABLE + (currid*16)+11];
+    call MOD_2;
+    multipop(R1,R2);
+    
+    return;
+endif;
+//Exit
+if(funcnum==3) then
+    multipush(R0,R1,R2);
+    R1=4;
+    R2=currid;
+    call MOD_1;
+    multipop(R0,R1,R2);
+    multipush(R0,R1,R2);
+    R1=2;
+    R2=currid;
+    call MOD_1;
+    multipop(R0,R1,R2);
+    [PROCESS_TABLE +currid*16 +4]=TERMINATED;
+    if([PROCESS_TABLE+currid*16+9]!=9) then
+        alias i R3;
+        i=0;
+        while(i<16) do
+            if([PROCESS_TABLE+i*16+2]==currid) then
+                [PROCESS_TABLE+i*16+2]=-1;
+            endif;
+            if([PROCESS_TABLE+i*16+4]==WAIT_PROCESS && [PROCESS_TABLE+i*16+5]==currid)then
+                [PROCESS_TABLE+i*16+4]=READY;
+            endif;
+            i=i+1;
+        endwhile;
+    endif;
+
+
+    return ;
+endif;
+//Free Page table
+
+if(funcnum==4) then
+    alias diskmap R11;
+    alias pagetable R12;
+    pagetable=PROCESS_TABLE+currid*16 +14;
+    diskmap=DISK_MAP_TABLE+currid*10;
+    [[pagetable]+0]=-1;
+    [[pagetable]+1]="0000";
+    [[pagetable]+2]=-1;
+    [[pagetable]+3]="0000";
+    
+    if([diskmap+2]!=-1) then
+    multipush(R1,R2,R3,R4,R11);
+    R1=4;
+    R2=[diskmap+2];
+    R3=currid;
+    call MOD_2;
+    multipop(R1,R2,R3,R4,R11);
+    endif;
+
+        if([diskmap+3]!=-1) then
+    multipush(R1,R2,R3,R4,R11);
+    R1=4;
+    R3=currid;
+    R2=[diskmap+3];
+    call MOD_2;
+    multipop(R1,R2,R3,R4,R11);
+    endif;
+
+        if([diskmap+8]!=-1) then
+    multipush(R1,R2,R3,R4,R11);
+    R1=4;
+    R2=[diskmap+2];
+    R3=currid;
+    call MOD_2;
+    multipop(R1,R2,R3,R4,R11);
+    endif;
+
+        if([diskmap+9]!=-1) then
+    multipush(R1,R2,R3,R4,R11);
+    R1=4;
+    R2=[diskmap+2];
+    R3=currid;
+    call MOD_2;
+    multipop(R1,R2,R3,R4,R11);
+    endif;
+
+
+
+        
+        alias i R7;
+        i=4;
+        while(i<20) do
+            if([[pagetable]+i]!=-1) then
+                multipush(R1,R2,R7,R11);
+                R2=[[pagetable]+i];
+                R1=2;
+                call MOD_2;
+
+                multipop(R1,R2,R7,R11);
+                [[pagetable]+i]=-1;
+                [[pagetable]+i+1]="0000";
+            endif;
+            i=i+2;
+        endwhile;
+
+    [diskmap+2]=-1;
+    [diskmap+3]=-1;
+    [diskmap+4]=-1;
+    [diskmap+5]=-1;
+    [diskmap+6]=-1;
+    [diskmap+7]=-1;
+    [diskmap+8]=-1;
+    [diskmap+9]=-1;
+    return ;
+
+        
+endif;  
+
+//kill ALl
+if(funcnum==5) then
+    alias i R3;
+    i=0;
+    while(i<60 && [INODE_TABLE+i*16]!=-1) do
+        multipush(R1,R2,R3);
+        R1=4;
+        R2=i;
+        R3=[SYSTEM_STATUS_TABLE+1];
+        multipop(R1,R2,R3);
+        i=i+1;
+    endwhile;
+    i=2;
+    while(i<16) do
+        if(i!=currid) then
+            multipush(R1,R2,R3);
+            R1=4;
+            R2=i;
+            multipop(R1,R2,R3);    
+        endif;
+        i=i+1;
+    endwhile;
+    i=0;
+    while(i<60 && [INODE_TABLE+i*16]!=-1) do
+        multipush(R1,R2,R3);
+        R1=5;
+        R2=i;
+        R3=[SYSTEM_STATUS_TABLE+1];
+        multipop(R1,R2,R3);
+        i=i+1;
+    endwhile;
+    return;
+endif;
