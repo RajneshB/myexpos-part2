@@ -106,3 +106,20 @@ if(funcnum==3) then
     
 
 endif;
+
+//get swap block
+if(funcnum==6) then
+    alias i R2;
+    i=DISK_SWAP_AREA;
+    while(i< DISK_SIZE) do
+        if([DISK_FREE_LIST+i]==0) then
+            [DISK_FREE_LIST+i]=1;
+            R0=i;
+            return;
+        endif;
+        i=i+1;
+    endwhile;
+    R0=-1;
+    return;
+endif;
+

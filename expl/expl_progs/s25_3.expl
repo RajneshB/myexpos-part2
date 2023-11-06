@@ -26,6 +26,8 @@ begin
         fd=exposcall("Open",filename);
 
         pidtwo =  exposcall("Fork");
+        // breakpoint;
+
         if(pidtwo == 0) then
             iter = 1;
             while(iter <= 100) do
@@ -43,7 +45,7 @@ begin
                 iter=iter+2;
             endwhile;
         endif;
-
+        // breakpoint;
         temp = exposcall("Semrelease", semid);
     endif;
 

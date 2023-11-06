@@ -120,6 +120,14 @@ loadi(37,50);
 loadi(67, 9);
 loadi(68, 10);
 
+//module
+loadi(52,65);
+loadi(53,66);
+
+[SYSTEM_STATUS_TABLE+4]=0;
+[SYSTEM_STATUS_TABLE+5]=0;
+
+
 [DISK_STATUS_TABLE]=0;
 [TERMINAL_STATUS_TABLE]=0;
 
@@ -156,16 +164,17 @@ PTLR=10;
 
 
 
-
+alias prcctwo R1;
+prcctwo=PROCESS_TABLE +16;
 //process
-[PROCESS_TABLE +16 + 11]=77;
-[PROCESS_TABLE +16+ 1]=1;
-[PROCESS_TABLE+16+12]=0;
-[PROCESS_TABLE+16+14]=PTBR;
-[PROCESS_TABLE+16+15]=PTLR;
-[PROCESS_TABLE+16+4]=CREATED;
-[PROCESS_TABLE+16+13]=8*512;
-[PROCESS_TABLE+16+3]=1;
+[prcctwo+ 11]=77;
+[prcctwo+ 1]=1;
+[prcctwo+12]=0;
+[prcctwo+14]=PTBR;
+[prcctwo+15]=PTLR;
+[prcctwo+4]=CREATED;
+[prcctwo+13]=8*512;
+[prcctwo+3]=1;
 [66*512]=[65*512 +1];
 
 
@@ -201,15 +210,16 @@ PTLR = 10;
 [PTBR+18] = 79; 
 [PTBR+19] = "0110";
 
-
-[PROCESS_TABLE + 16*2 + 1] = 2;
-[PROCESS_TABLE + 16*2 + 2] = 1;
-[PROCESS_TABLE + 16*2 + 4] = TERMINATED;
-[PROCESS_TABLE + 16*2 + 11] = 80; 
-[PROCESS_TABLE + 16*2 + 12] = 0; 
-[PROCESS_TABLE + 16*2 + 13] = 8*512; 
-[PROCESS_TABLE + 16*2 + 14] = PTBR;
-[PROCESS_TABLE + 16*2 + 15] = PTLR;
+alias prcth R2;
+prcth=PROCESS_TABLE + 16*2 ;
+[prcth + 1] = 2;
+[prcth + 2] = 1;
+[prcth + 4] = TERMINATED;
+[prcth + 11] = 80; 
+[prcth + 12] = 0; 
+[prcth + 13] = 8*512; 
+[prcth + 14] = PTBR;
+[prcth + 15] = PTLR;
 [78 * 512] = [67 * 512 + 1];
 
 
@@ -225,8 +235,9 @@ endwhile;
 backup;
 alias i R0;
 i=2;
-while(i<16) do
+while(i<MAX_PROC_NUM) do
 [PROCESS_TABLE + i*16 + 4]=TERMINATED;
+[PROCESS_TABLE+i*16]=0;
 i=i+1;
 endwhile;
 
@@ -242,7 +253,7 @@ while (i < 128) do
 endwhile;
 
 [SYSTEM_STATUS_TABLE + 3] = 0;
-[SYSTEM_STATUS_TABLE + 2] = 47;
+[SYSTEM_STATUS_TABLE + 2] = 45;
     while(i<=16) do
         [81*512-i]=-1;
         i=i+1;

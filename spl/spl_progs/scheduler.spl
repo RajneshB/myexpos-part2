@@ -10,22 +10,30 @@ process_entry=PROCESS_TABLE + PID*16;
 
 alias newPID R2;
 alias i R1;
-i=PID+1;
-newPID = 0;
-
-if(i >= 16) then
-	i = 0;
-endif;
-while(i<16) do
-    if([PROCESS_TABLE + (i*16) +4] == READY || [PROCESS_TABLE + (i*16) +4]== CREATED) then
-        newPID=i;
-        break;
+if([SYSTEM_STATUS_TABLE+5]!=0) then
+    if([PROCESS_TABLE+16*15+4]==WAIT_DISK) then
+        newPID=0;
+    else
+        newPID=15;
     endif;
-    i=i+1;
-endwhile;
+else
+    i=PID+1;
+    newPID = 0;
 
-if([PROCESS_TABLE + (i*16) +4] == TERMINATED) then 
-    newPID=0;
+    if(i >= 16) then
+        i = 0;
+    endif;
+    while(i<16) do
+        if(([PROCESS_TABLE + (i*16) +4] == READY || [PROCESS_TABLE + (i*16) +4]== CREATED) && [PROCESS_TABLE+i*16+6]==0) then
+            newPID=i;
+            break;
+        endif;
+        i=i+1;
+    endwhile;
+
+    if([PROCESS_TABLE + (i*16) +4] == TERMINATED) then 
+        newPID=0;
+    endif;
 endif;
 
 SP=[PROCESS_TABLE +(newPID*16) +11]*512 + [PROCESS_TABLE + (newPID*16)+12];

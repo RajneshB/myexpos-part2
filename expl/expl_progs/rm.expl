@@ -1,0 +1,16 @@
+int main()
+{
+    decl
+        int a,temp,fd,i,ret;
+        str input,inv,x,rinp;
+    enddecl
+    begin
+        x="NULL";
+        rinp = "Deleted";
+        temp = exposcall("Read",-1,input);
+        temp = exposcall("Delete",input);
+        temp = exposcall("Write",-2,rinp);
+
+        return 0;
+    end
+}

@@ -51,3 +51,8 @@ load --exec ../expl/expl_progs/s25_3.xsm
 load --exec ../expl/expl_progs/s25_4.xsm
 load --exec ../expl/expl_progs/cat.xsm
 load --exec ../expl/expl_progs/cp.xsm
+load --exec ../expl/expl_progs/rm.xsm
+load --module 6 ../spl/spl_progs/mod_6.xsm
+load --exec ../expl/expl_progs/s27_2.xsm
+load --exec ../expl/expl_progs/pgm1.xsm
+load --exec ../expl/expl_progs/s27_3.xsm
