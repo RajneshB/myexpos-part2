@@ -56,3 +56,9 @@ load --module 6 ../spl/spl_progs/mod_6.xsm
 load --exec ../expl/expl_progs/s27_2.xsm
 load --exec ../expl/expl_progs/pgm1.xsm
 load --exec ../expl/expl_progs/s27_3.xsm
+load --exec ../expl/expl_progs/s27_4.xsm
+load --exec ../expl/expl_progs/pgm2.xsm
+load --exec ../expl/expl_progs/s27_5.xsm
+load --exec ../expl/expl_progs/m_merge.xsm
+load --exec ../expl/expl_progs/m_sort.xsm
+load --exec ../expl/expl_progs/m_store.xsm

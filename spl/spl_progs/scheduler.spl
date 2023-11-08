@@ -20,20 +20,18 @@ else
     i=PID+1;
     newPID = 0;
 
-    if(i >= 16) then
+    if(i == 15) then
         i = 0;
     endif;
-    while(i<16) do
+    while(1==1) do
         if(([PROCESS_TABLE + (i*16) +4] == READY || [PROCESS_TABLE + (i*16) +4]== CREATED) && [PROCESS_TABLE+i*16+6]==0) then
             newPID=i;
             break;
         endif;
-        i=i+1;
+        i=(i+1)%15;
     endwhile;
 
-    if([PROCESS_TABLE + (i*16) +4] == TERMINATED) then 
-        newPID=0;
-    endif;
+
 endif;
 
 SP=[PROCESS_TABLE +(newPID*16) +11]*512 + [PROCESS_TABLE + (newPID*16)+12];

@@ -1,7 +1,4 @@
-//breakpoint;
-// if([SYSTEM_STATUS_TABLE+6]<[SYSTEM_STATUS_TABLE+2]) then
-// 	[SYSTEM_STATUS_TABLE+6]=[SYSTEM_STATUS_TABLE+2];
-// endif;
+
 
 [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE +1] * 16) +13]=SP;
 SP=[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE +1])*16 + 11]*512 -1;
@@ -20,7 +17,6 @@ if ( [ SYSTEM_STATUS_TABLE + 5 ] != 0 )then
             R2 = [SYSTEM_STATUS_TABLE + 1];
             call MOD_6;
         endif;
-
     endif;
 else
     if ( [ SYSTEM_STATUS_TABLE + 2 ] < MEM_LOW )then
@@ -29,14 +25,14 @@ else
 
         if ( [SYSTEM_STATUS_TABLE + 4] > 0 )then
         
-            alias i R1;
-            i=3;
-            while(i < MAX_PROC_NUM-1)do
-                if ( ([PROCESS_TABLE + 16*i + 6 ] == 1 && [PROCESS_TABLE + 16*i] > MAX_TICK ) || [ SYSTEM_STATUS_TABLE + 2 ] > MEM_HIGH )then
+            alias iter R1;
+            iter=3;
+            while(iter < MAX_PROC_NUM-1)do
+                if ( ([PROCESS_TABLE + 16*iter + 6 ] == 1 && [PROCESS_TABLE + 16*iter] > MAX_TICK ) || [ SYSTEM_STATUS_TABLE + 2 ] > MEM_HIGH )then
                     [ SYSTEM_STATUS_TABLE + 5 ] = SWAP_IN;
                     break;
                 endif;
-                i=i+1;
+                iter=iter+1;
             endwhile;
 
         endif;
@@ -48,9 +44,9 @@ endif;
 
 alias i R0;
 i=0;
-while(i<16)  do
-	if([PROCESS_TABLE + ([SYSTEM_STATUS_TABLE+1]*16) +4]!=TERMINATED) then
-		[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE+1]*16) ]=[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE+1]*16) ]+1;
+while(i<MAX_PROC_NUM)  do
+	if([PROCESS_TABLE + (i*16) +4]!=TERMINATED) then
+		[PROCESS_TABLE + (i*16) ]=[PROCESS_TABLE + (i*16) ]+1;
 	endif;
 	i=i+1;
 endwhile;
@@ -59,7 +55,6 @@ call SCHEDULER;
 
 restore;
 SP=[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE +1] * 16) +13];
-[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE +1] * 16) +9]=0;
 
 
 ireturn; 

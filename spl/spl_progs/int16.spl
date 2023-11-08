@@ -148,7 +148,7 @@ if(syscall==24) then
         i=i+1;
     endwhile;
     if(i==MAX_USER_NUM) then
-        print "hell";
+        // print "hell";
         [retval]=-2;
         [prcctable+9]=0;
         SP=userSP;
@@ -156,7 +156,7 @@ if(syscall==24) then
     endif;
     if([prcctable+3]!=i) then
         if(userid!=ROOT) then
-            print "hell2";
+            // print "hell2";
             [retval]=-1;
             [prcctable+9]=0;
             SP=userSP;
